@@ -50,9 +50,6 @@ class Movie(BaseModel):
             ]
         }
 
-class CreateMovieRes(Base):
-    Message: str
-
 @app.get("/",tags=["Home"])
 def message():
     return HTMLResponse("<h1>hola halan marcelo</h1>")
@@ -98,15 +95,15 @@ def get_movie(id: int = Path(ge=1, le=2000)) -> Movie :
 
 #parametros query
 @app.get("/movies/", tags=["Query"],response_model=List[Movie])
-def get_movies_by_category(category: str = Query(min_length=5,max_length=15)) -> List[Movie]:
-    movies_by_category = []
-    for movie in movies:
-        if(movie["category"] == category):
-            movies_by_category.append(movie)
-    return JSONResponse(content = movies_by_category)
+def get_movies_by_category(category: str = Query(max_length=50, min_length=3)):
+    db = Session()
+    movies = db.query(MovieModel).filter(MovieModel.category == category).all()
+    if not movies:
+        return {"message": "No existen peliculas con esa categoria"}
+    return movies
 
 #crear
-@app.post('/movies',tags=['movies'],response_model=CreateMovieRes, status_code= 201)
+@app.post('/movies',tags=['movies'],response_model=dict, status_code= 201)
 def create_movie(movie: Movie) -> dict:    
     db = Session()
     new_movie = MovieModel(**movie.model_dump_json())
@@ -114,7 +111,7 @@ def create_movie(movie: Movie) -> dict:
     db.commit()
     db.refresh(db)
     #movies.append(movie)
-    return JSONResponse(status_code = 201 ,content=)
+    return JSONResponse(status_code = 201 ,content={"message":"test"})
 #modificar y borrar
 
 #put
